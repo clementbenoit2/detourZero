@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#132445">
+<title>Carnet de Route</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blueprint:#132445;
+    --blueprint-2:#1B3363;
+    --line:#DCE8FF;
+    --grid:#28407A;
+    --muted:#8FA6C9;
+    --flare:#FF7A45;
+    --warn:#FFC857;
+    --mint:#3ED9A0;
+    --paper:#F4F6FA;
+    --ink:#132445;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; height:100%; background:var(--blueprint); color:var(--line); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  body{display:flex; flex-direction:column;}
+
+  header.titleblock{
+    padding:14px 16px 12px;
+    border-bottom:2px solid var(--grid);
+    flex-shrink:0;
+  }
+  header.titleblock h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:19px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    margin:0 0 3px;
+  }
+  header.titleblock p{
+    margin:0;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+
+  main{flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden;}
+
+  .controls{
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    border-bottom:1px solid var(--grid);
+    flex-shrink:0;
+  }
+  .field label{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  .field input[type="text"]{
+    width:100%;
+    background:var(--blueprint-2);
+    border:1px solid var(--grid);
+    color:var(--line);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:9px 10px;
+    border-radius:2px;
+  }
+  .field input[type="text"]::placeholder{color:var(--muted); opacity:0.6;}
+  .field input[type="text"]:focus-visible{outline:2px solid var(--flare); outline-offset:1px;}
+
+  .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+
+  .toggle-group{display:flex; gap:6px;}
+  .toggle-group button{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--blueprint-2);
+    border:1px solid var(--grid);
+    color:var(--muted);
+    padding:8px 10px;
+    border-radius:2px;
+  }
+  .toggle-group button[aria-pressed="true"]{
+    background:var(--flare);
+    border-color:var(--flare);
+    color:var(--blueprint);
+    font-weight:600;
+  }
+  .toggle-group button:focus-visible{outline:2px solid var(--line); outline-offset:1px;}
+
+  .checkline{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .checkline input{width:16px; height:16px; accent-color:var(--flare);}
+
+  button.primary{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--flare);
+    color:var(--blueprint);
+    border:none;
+    padding:11px 14px;
+    border-radius:2px;
+    width:100%;
+  }
+  button.primary:disabled{opacity:0.5;}
+  button.primary:focus-visible{outline:2px solid var(--line); outline-offset:2px;}
+
+  #status{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    min-height:14px;
+  }
+
+  #map{width:100%; height:38vh; min-height:220px; flex-shrink:0;}
+
+  section.results{
+    flex:1;
+    overflow-y:auto;
+    padding:12px 16px 24px;
+    background:var(--blueprint);
+  }
+  #resultsList{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+  #resultsList li{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:3px;
+    padding:10px 12px;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+  .tag-num{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+    font-size:12px;
+    background:var(--blueprint);
+    color:var(--line);
+    border-radius:50%;
+    width:22px; height:22px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .tag-body{flex:1; min-width:0;}
+  .tag-name{font-weight:600; font-size:14px;}
+  .tag-brand{font-weight:400; color:#5A6B8C;}
+  .tag-detail{font-family:'JetBrains Mono',monospace; font-size:12px; margin-top:3px; color:#3C4D6E;}
+  .tag-badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    padding:3px 7px;
+    border-radius:2px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .tag-badge.onroute{background:rgba(62,217,160,0.18); color:#1C7A57;}
+  .tag-badge.detour{background:rgba(255,200,87,0.25); color:#8A6100;}
+
+  .empty{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    padding:24px 12px;
+  }
+
+  @media (min-width: 820px){
+    main{flex-direction:row;}
+    .controls{width:300px; border-right:1px solid var(--grid); border-bottom:none; overflow-y:auto;}
+    #map{flex:1; height:auto;}
+    section.results{width:340px; border-left:1px solid var(--grid);}
+    main > .mapcol{flex:1; display:flex; flex-direction:column;}
+  }
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+<header class="titleblock">
+  <h1>Carnet de Route</h1>
+  <p>Stations-service sur votre trajet en cours</p>
+</header>
+
+<main>
+  <section class="controls">
+    <div class="field">
+      <label for="originInput">Position actuelle</label>
+      <input type="text" id="originInput" placeholder="Détectée automatiquement, ou lat,lng">
+    </div>
+    <div class="field">
+      <label for="destInput">Destination</label>
+      <input type="text" id="destInput" placeholder="Adresse ou ville d'arrivée">
+    </div>
+    <div class="field">
+      <label for="brandInput">Marque recherchée</label>
+      <input type="text" id="brandInput" placeholder="Ex. Total, Shell, Esso">
+    </div>
+
+    <div class="field">
+      <label>Détour accepté</label>
+      <div class="toggle-group" role="group" aria-label="Rayon de détour accepté">
+        <button type="button" class="radiusBtn" data-r="0" aria-pressed="true">Aucun</button>
+        <button type="button" class="radiusBtn" data-r="1" aria-pressed="false">1 km</button>
+        <button type="button" class="radiusBtn" data-r="5" aria-pressed="false">5 km</button>
+      </div>
+    </div>
+
+    <label class="checkline">
+      <input type="checkbox" id="openOnlyCheck">
+      Ouvertes uniquement à l'arrivée
+    </label>
+
+    <button type="button" class="primary" id="searchBtn">Rechercher</button>
+    <div id="status" aria-live="polite"></div>
+  </section>
+
+  <div class="mapcol">
+    <div id="map"></div>
+    <section class="results">
+      <ol id="resultsList"></ol>
+    </section>
+  </div>
+</main>
+
+<script>
+  // ————————————————————————————————————————————————————————————
+  // Config
+  // ————————————————————————————————————————————————————————————
+  const MAX_RADIUS_KM = 5;          // plus grande option de rayon proposée
+  const ON_ROUTE_TOLERANCE_KM = 0.15;
+  const SAMPLE_STEP_KM = 2;
+  const SEARCH_RADIUS_M = 3000;
+
+  const BLUEPRINT_STYLE = [
+    { elementType: 'geometry', stylers: [{ color: '#132445' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#132445' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#8FA6C9' }] },
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#28407A' }] },
+    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#DCE8FF' }, { weight: 0.5 }] },
+    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3A5A9E' }] },
+    { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#DCE8FF' }, { weight: 0.8 }] },
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0E1B36' }] },
+    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#28407A' }, { weight: 0.5 }] },
+    { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] }
+  ];
+
+  // ————————————————————————————————————————————————————————————
+  // État
+  // ————————————————————————————————————————————————————————————
+  let map, directionsRenderer, markers = [];
+  let allStations = [];
+  let currentRadius = 0;
+
+  // ————————————————————————————————————————————————————————————
+  // Géométrie (équivalent client-side du script Node)
+  // ————————————————————————————————————————————————————————————
+  function round1(n) { return Math.round(n * 10) / 10; }
+
+  function buildCumulative(path) {
+    const cum = [0];
+    for (let i = 1; i < path.length; i++) {
+      cum.push(cum[i - 1] + google.maps.geometry.spherical.computeDistanceBetween(path[i - 1], path[i]) / 1000);
+    }
+    return cum;
+  }
+
+  function nearestOnRoute(point, path, cum) {
+    let best = { dist: Infinity, index: 0 };
+    for (let i = 0; i < path.length; i++) {
+      const d = google.maps.geometry.spherical.computeDistanceBetween(point, path[i]) / 1000;
+      if (d < best.dist) best = { dist: d, index: i };
+    }
+    return { offsetKm: best.dist, cumKm: cum[best.index] };
+  }
+
+  function samplePointsAhead(path, cum, fromCumKm, stepKm) {
+    const samples = [];
+    let next = fromCumKm;
+    for (let i = 0; i < path.length; i++) {
+      if (cum[i] >= next) { samples.push(path[i]); next += stepKm; }
+    }
+    return samples;
+  }
+
+  function parseLatLng(str) {
+    if (!/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(str)) return null;
+    const [lat, lng] = str.split(',').map(Number);
+    return { lat, lng };
+  }
+
+  function routeTotals(route) {
+    return {
+      km: route.legs.reduce((s, l) => s + l.distance.value, 0) / 1000,
+      min: route.legs.reduce((s, l) => s + l.duration.value, 0) / 60
+    };
+  }
+
+  // ————————————————————————————————————————————————————————————
+  // Horaires d'ouverture à l'heure d'arrivée estimée
+  // ————————————————————————————————————————————————————————————
+  function parseTimeToMinutes(hhmm) { return Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(2, 4)); }
+
+  function isOpenAtArrival(openingHours, utcOffsetMinutes, arrivalUtcMs) {
+    if (!openingHours || !Array.isArray(openingHours.periods)) return null;
+    const periods = openingHours.periods;
+    if (periods.length === 1 && !periods[0].close) return true;
+    if (typeof utcOffsetMinutes !== 'number') return null;
+
+    const local = new Date(arrivalUtcMs + utcOffsetMinutes * 60000);
+    const arrivalDay = local.getUTCDay();
+    const arrivalMinutes = local.getUTCHours() * 60 + local.getUTCMinutes();
+    const arrivalAbs = arrivalDay * 1440 + arrivalMinutes;
+
+    for (const p of periods) {
+      if (!p.close) continue;
+      const openAbs = p.open.day * 1440 + parseTimeToMinutes(p.open.time);
+      let closeAbs = p.close.day * 1440 + parseTimeToMinutes(p.close.time);
+      if (closeAbs <= openAbs) closeAbs += 7 * 1440;
+      if ((arrivalAbs >= openAbs && arrivalAbs <= closeAbs) ||
+          (arrivalAbs + 7 * 1440 >= openAbs && arrivalAbs + 7 * 1440 <= closeAbs)) return true;
+    }
+    return false;
+  }
+
+  function formatLocalTime(utcOffsetMinutes, arrivalUtcMs) {
+    const local = new Date(arrivalUtcMs + utcOffsetMinutes * 60000);
+    return String(local.getUTCHours()).padStart(2, '0') + ':' + String(local.getUTCMinutes()).padStart(2, '0');
+  }
+
+  // ————————————————————————————————————————————————————————————
+  // Appels Places (promisifiés)
+  // ————————————————————————————————————————————————————————————
+  function searchBrandStations(service, point, brand) {
+    return new Promise((resolve) => {
+      service.nearbySearch({ location: point, radius: SEARCH_RADIUS_M, keyword: brand, type: 'gas_station' }, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+          resolve(results.map((r) => ({
+            placeId: r.place_id, name: r.name,
+            lat: r.geometry.location.lat(), lng: r.geometry.location.lng(),
+            address: r.vicinity || ''
+          })));
+        } else resolve([]);
+      });
+    });
+  }
+
+  function getPlaceDetails(service, placeId) {
+    return new Promise((resolve) => {
+      service.getDetails({ placeId, fields: ['opening_hours', 'utc_offset_minutes'] }, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+          resolve({
+            opening_hours: place.opening_hours ? { periods: place.opening_hours.periods } : null,
+            utcOffsetMinutes: place.utc_offset_minutes
+          });
+        } else resolve({ opening_hours: null, utcOffsetMinutes: null });
+      });
+    });
+  }
+
+  // ————————————————————————————————————————————————————————————
+  // Recherche principale
+  // ————————————————————————————————————————————————————————————
+  async function handleSearch() {
+    const originVal = document.getElementById('originInput').value.trim();
+    const destVal = document.getElementById('destInput').value.trim();
+    const brand = document.getElementById('brandInput').value.trim();
+    const status = document.getElementById('status');
+    const btn = document.getElementById('searchBtn');
+
+    if (!originVal || !destVal || !brand) {
+      status.textContent = 'Renseignez la position actuelle, la destination et la marque.';
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = 'Calcul du trajet…';
+
+    try {
+      const directionsService = new google.maps.DirectionsService();
+      const placesService = new google.maps.places.PlacesService(map);
+      const originCoords = parseLatLng(originVal);
+      const originParam = originCoords || originVal;
+
+      const result = await directionsService.route({
+        origin: originParam, destination: destVal, travelMode: google.maps.TravelMode.DRIVING
+      });
+      const route = result.routes[0];
+      directionsRenderer.setDirections(result);
+
+      const path = route.overview_path;
+      const cum = buildCumulative(path);
+      const vehiclePoint = originCoords ? new google.maps.LatLng(originCoords.lat, originCoords.lng) : path[0];
+      const fromCumKm = nearestOnRoute(vehiclePoint, path, cum).cumKm;
+
+      status.textContent = 'Recherche des stations le long du trajet…';
+      const samples = samplePointsAhead(path, cum, fromCumKm, SAMPLE_STEP_KM);
+      const foundMap = new Map();
+      for (const p of samples) {
+        const results = await searchBrandStations(placesService, p, brand);
+        for (const r of results) foundMap.set(r.placeId, r);
+      }
+
+      const candidates = [];
+      for (const st of foundMap.values()) {
+        const proj = nearestOnRoute(new google.maps.LatLng(st.lat, st.lng), path, cum);
+        if (proj.cumKm < fromCumKm - 0.5) continue;
+        if (proj.offsetKm > MAX_RADIUS_KM) continue;
+        candidates.push({ ...st, offsetKm: proj.offsetKm, cumKm: proj.cumKm });
+      }
+
+      status.textContent = candidates.length
+        ? 'Calcul des détours et horaires (' + candidates.length + ' station(s))…'
+        : 'Aucune station de cette marque trouvée dans les ' + MAX_RADIUS_KM + ' km autour du trajet.';
+
+      const enriched = [];
+      for (const s of candidates) {
+        const kmAhead = round1(s.cumKm - fromCumKm);
+        let entry;
+
+        if (s.offsetKm < ON_ROUTE_TOLERANCE_KM) {
+          const toStation = await directionsService.route({
+            origin: originParam, destination: { lat: s.lat, lng: s.lng }, travelMode: google.maps.TravelMode.DRIVING
+          });
+          entry = { ...s, kmAhead, onRoute: true, extraKm: 0, extraMin: 0, etaMin: routeTotals(toStation.routes[0]).min };
+        } else {
+          const viaResult = await directionsService.route({
+            origin: originParam, destination: destVal,
+            waypoints: [{ location: { lat: s.lat, lng: s.lng }, stopover: true }],
+            travelMode: google.maps.TravelMode.DRIVING
+          });
+          const direct = routeTotals(route);
+          const via = routeTotals(viaResult.routes[0]);
+          const etaMin = viaResult.routes[0].legs[0].duration.value / 60;
+          entry = {
+            ...s, kmAhead, onRoute: false,
+            extraKm: round1(via.km - direct.km), extraMin: Math.round(via.min - direct.min), etaMin
+          };
+        }
+
+        const details = await getPlaceDetails(placesService, entry.placeId);
+        const arrivalUtcMs = Date.now() + entry.etaMin * 60000;
+        entry.openAtArrival = isOpenAtArrival(details.opening_hours, details.utcOffsetMinutes, arrivalUtcMs);
+        entry.arrivalLocal = typeof details.utcOffsetMinutes === 'number' ? formatLocalTime(details.utcOffsetMinutes, arrivalUtcMs) : null;
+
+        enriched.push(entry);
+      }
+
+      enriched.sort((a, b) => a.cumKm - b.cumKm);
+      allStations = enriched;
+      status.textContent = '';
+      renderAll();
+    } catch (err) {
+      status.textContent = 'Erreur : ' + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ————————————————————————————————————————————————————————————
+  // Rendu (filtrage 100% côté client, sans nouvel appel réseau)
+  // ————————————————————————————————————————————————————————————
+  function renderAll() {
+    const openOnly = document.getElementById('openOnlyCheck').checked;
+    const list = document.getElementById('resultsList');
+    markers.forEach((m) => m.setMap(null));
+    markers = [];
+    list.innerHTML = '';
+
+    const filtered = allStations.filter((s) => {
+      const withinRadius = currentRadius === 0 ? s.offsetKm < ON_ROUTE_TOLERANCE_KM : s.offsetKm <= currentRadius;
+      if (!withinRadius) return false;
+      if (openOnly && s.openAtArrival !== true) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<li class="empty" style="display:block; background:none; color:var(--muted);">' +
+        (allStations.length === 0 ? 'Lancez une recherche pour voir les stations.' : 'Aucune station ne correspond à ces filtres.') +
+        '</li>';
+      return;
+    }
+
+    filtered.forEach((s, i) => {
+      const color = s.onRoute ? '#3ED9A0' : '#FFC857';
+      const marker = new google.maps.Marker({
+        position: { lat: s.lat, lng: s.lng },
+        map,
+        label: { text: String(i + 1), color: '#132445', fontWeight: '700', fontFamily: 'JetBrains Mono' },
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: color, fillOpacity: 1, strokeColor: '#132445', strokeWeight: 2 }
+      });
+      markers.push(marker);
+
+      const li = document.createElement('li');
+      const arrival = s.arrivalLocal ? ' · arrivée ~' + s.arrivalLocal : '';
+      const detail = s.onRoute
+        ? 'Sur le trajet, à ' + s.kmAhead + ' km devant vous' + arrival
+        : 'Détour +' + s.extraKm + ' km, +' + s.extraMin + ' min, à ' + s.kmAhead + ' km devant vous' + arrival;
+      const badgeClass = s.onRoute ? 'onroute' : 'detour';
+      const badgeText = s.onRoute ? 'Sur le trajet' : 'Détour';
+
+      li.innerHTML =
+        '<span class="tag-num">' + (i + 1) + '</span>' +
+        '<span class="tag-body">' +
+          '<div class="tag-name">' + s.name + ' <span class="tag-brand">· ' + escapeHtml(document.getElementById('brandInput').value.trim()) + '</span></div>' +
+          '<div class="tag-detail">' + detail + '</div>' +
+        '</span>' +
+        '<span class="tag-badge ' + badgeClass + '">' + badgeText + '</span>';
+      list.appendChild(li);
+    });
+  }
+
+  function escapeHtml(s) { return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  // ————————————————————————————————————————————————————————————
+  // Initialisation
+  // ————————————————————————————————————————————————————————————
+  function initApp() {
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: 46.6, lng: 2.4 }, zoom: 6, styles: BLUEPRINT_STYLE,
+      disableDefaultUI: true, zoomControl: true
+    });
+    directionsRenderer = new google.maps.DirectionsRenderer({
+      map, suppressMarkers: true, polylineOptions: { strokeColor: '#DCE8FF', strokeWeight: 4 }
+    });
+
+    document.querySelectorAll('.radiusBtn').forEach((b) => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.radiusBtn').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        currentRadius = parseFloat(b.dataset.r);
+        renderAll();
+      });
+    });
+    document.getElementById('openOnlyCheck').addEventListener('change', renderAll);
+    document.getElementById('searchBtn').addEventListener('click', handleSearch);
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { document.getElementById('originInput').value = pos.coords.latitude.toFixed(5) + ',' + pos.coords.longitude.toFixed(5); },
+        () => { document.getElementById('status').textContent = 'Position non détectée : saisissez-la manuellement (lat,lng).'; },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+  }
+  window.initApp = initApp;
+</script>
+
+<!-- Remplacez YOUR_API_KEY_ICI par votre clé Google Maps Platform (voir SETUP-APP-IOS.md) -->
+<script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_ICI&libraries=places,geometry&callback=initApp"></script>
+
+</body>
+</html>
