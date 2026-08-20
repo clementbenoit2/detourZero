@@ -135,7 +135,7 @@
     min-height:14px;
   }
 
-  #map{width:100%; height:38vh; min-height:220px; flex-shrink:0;}
+  #map{width:100%; height:60vh; min-height:340px; flex-shrink:0;}
 
   section.results{
     flex:1;
@@ -252,8 +252,8 @@
   // ————————————————————————————————————————————————————————————
   // Config
   // ————————————————————————————————————————————————————————————
-  const MAX_RADIUS_KM = 5;          // plus grande option de rayon proposée
-  const ON_ROUTE_TOLERANCE_KM = 0.15;
+  const MAX_RADIUS_KM = 5;              // plus grande option de rayon proposée (préfiltre géométrique des candidats)
+  const ON_ROUTE_EXTRA_KM_TOLERANCE = 0.3; // en-dessous de ce détour routier réel, la station est classée "sur le trajet"
   const SAMPLE_STEP_KM = 2;
   const SEARCH_RADIUS_M = 3000;
 
@@ -443,27 +443,28 @@
       const enriched = [];
       for (const s of candidates) {
         const kmAhead = round1(s.cumKm - fromCumKm);
-        let entry;
 
-        if (s.offsetKm < ON_ROUTE_TOLERANCE_KM) {
-          const toStation = await directionsService.route({
-            origin: originParam, destination: { lat: s.lat, lng: s.lng }, travelMode: google.maps.TravelMode.DRIVING
-          });
-          entry = { ...s, kmAhead, onRoute: true, extraKm: 0, extraMin: 0, etaMin: routeTotals(toStation.routes[0]).min };
-        } else {
-          const viaResult = await directionsService.route({
-            origin: originParam, destination: destVal,
-            waypoints: [{ location: { lat: s.lat, lng: s.lng }, stopover: true }],
-            travelMode: google.maps.TravelMode.DRIVING
-          });
-          const direct = routeTotals(route);
-          const via = routeTotals(viaResult.routes[0]);
-          const etaMin = viaResult.routes[0].legs[0].duration.value / 60;
-          entry = {
-            ...s, kmAhead, onRoute: false,
-            extraKm: round1(via.km - direct.km), extraMin: Math.round(via.min - direct.min), etaMin
-          };
-        }
+        // Toujours calculer le vrai itinéraire routier (origine -> station -> destination).
+        // Google ne génère jamais un demi-tour interdit : si la station est sur la chaussée
+        // opposée (typiquement sur autoroute), le détour réel via la prochaine sortie apparaît
+        // ici, même si la station semblait géométriquement "sur le trajet".
+        const viaResult = await directionsService.route({
+          origin: originParam, destination: destVal,
+          waypoints: [{ location: { lat: s.lat, lng: s.lng }, stopover: true }],
+          travelMode: google.maps.TravelMode.DRIVING
+        });
+        const direct = routeTotals(route);
+        const via = routeTotals(viaResult.routes[0]);
+        const etaMin = viaResult.routes[0].legs[0].duration.value / 60;
+        const realExtraKm = round1(via.km - direct.km);
+        const realExtraMin = Math.round(via.min - direct.min);
+        const onRoute = realExtraKm < ON_ROUTE_EXTRA_KM_TOLERANCE;
+
+        const entry = {
+          ...s, kmAhead, onRoute, etaMin,
+          extraKm: onRoute ? 0 : realExtraKm,
+          extraMin: onRoute ? 0 : realExtraMin
+        };
 
         const details = await getPlaceDetails(placesService, entry.placeId);
         const arrivalUtcMs = Date.now() + entry.etaMin * 60000;
@@ -495,7 +496,7 @@
     list.innerHTML = '';
 
     const filtered = allStations.filter((s) => {
-      const withinRadius = currentRadius === 0 ? s.offsetKm < ON_ROUTE_TOLERANCE_KM : s.offsetKm <= currentRadius;
+      const withinRadius = currentRadius === 0 ? s.onRoute : s.extraKm <= currentRadius;
       if (!withinRadius) return false;
       if (openOnly && s.openAtArrival !== true) return false;
       return true;
@@ -521,8 +522,8 @@
       const li = document.createElement('li');
       const arrival = s.arrivalLocal ? ' · arrivée ~' + s.arrivalLocal : '';
       const detail = s.onRoute
-        ? 'Sur le trajet, à ' + s.kmAhead + ' km devant vous' + arrival
-        : 'Détour +' + s.extraKm + ' km, +' + s.extraMin + ' min, à ' + s.kmAhead + ' km devant vous' + arrival;
+        ? 'Sur le trajet, vers le km ' + s.kmAhead + ' devant vous' + arrival
+        : 'Détour +' + s.extraKm + ' km, +' + s.extraMin + ' min, vers le km ' + s.kmAhead + ' devant vous' + arrival;
       const badgeClass = s.onRoute ? 'onroute' : 'detour';
       const badgeText = s.onRoute ? 'Sur le trajet' : 'Détour';
 
@@ -574,7 +575,7 @@
 </script>
 
 <!-- Remplacez YOUR_API_KEY_ICI par votre clé Google Maps Platform (voir SETUP-APP-IOS.md) -->
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAHPV_-vuAnD_vevbG4G2Xl7ayNOGSYfcg&libraries=places,geometry&callback=initApp"></script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_ICI&libraries=places,geometry&callback=initApp"></script>
 
 </body>
 </html>
