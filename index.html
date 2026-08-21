@@ -118,7 +118,7 @@
   }
   .field-input input[type="text"]::placeholder{color:var(--muted); opacity:0.55;}
 
-  .field-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .field-row{display:flex; align-items:center; gap:12px;}
 
   .segmented{
     position:relative;
@@ -162,13 +162,14 @@
     width:42px; height:25px;
     flex-shrink:0;
   }
-  .switch input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer;}
+  .switch input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer; z-index:2;}
   .switch .track{
     position:absolute; inset:0;
     background:var(--blueprint-2);
     border:1px solid var(--grid);
     border-radius:999px;
     transition:background 0.2s ease, border-color 0.2s ease;
+    pointer-events:none;
   }
   .switch .thumb{
     position:absolute; top:2px; left:2px;
@@ -176,6 +177,7 @@
     background:var(--muted);
     border-radius:50%;
     transition:transform 0.2s cubic-bezier(0.4,0,0.2,1), background 0.2s ease;
+    pointer-events:none;
   }
   .switch input:checked + .track{background:var(--flare); border-color:var(--flare);}
   .switch input:checked + .track + .thumb{transform:translateX(17px); background:var(--blueprint);}
@@ -186,6 +188,7 @@
     font-family:'Inter',sans-serif;
     font-size:13.5px;
     color:var(--line);
+    cursor:pointer;
   }
 
   button.primary{
@@ -436,6 +439,7 @@
   let map, directionsRenderer, markers = [];
   let allStations = [];
   let currentRadius = 0;
+  let destAutocomplete;
 
   // ————————————————————————————————————————————————————————————
   // Géométrie (équivalent client-side du script Node)
@@ -753,7 +757,7 @@
 </script>
 
 <!-- Remplacez YOUR_API_KEY_ICI par votre clé Google Maps Platform (voir SETUP-APP-IOS.md) -->
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAHPV_-vuAnD_vevbG4G2Xl7ayNOGSYfcg&libraries=places,geometry&callback=initApp"></script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_ICI&libraries=places,geometry&callback=initApp"></script>
 
 </body>
 </html>
