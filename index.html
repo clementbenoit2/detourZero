@@ -7,245 +7,403 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#132445">
 <title>Carnet de Route</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --blueprint:#132445;
-    --blueprint-2:#1B3363;
-    --line:#DCE8FF;
-    --grid:#28407A;
+    --blueprint:#0F1D3A;
+    --blueprint-2:#182D57;
+    --blueprint-3:#1F3868;
+    --line:#EAF1FF;
+    --grid:#2B4478;
     --muted:#8FA6C9;
     --flare:#FF7A45;
+    --flare-dim:#B85A34;
     --warn:#FFC857;
     --mint:#3ED9A0;
-    --paper:#F4F6FA;
+    --paper:#F7F8FB;
+    --paper-dim:#EDEFF5;
     --ink:#132445;
+    --ink-soft:#4A5A7D;
+    --radius:10px;
+    --radius-sm:6px;
+    --shadow-1:0 1px 2px rgba(4,10,26,0.4), 0 8px 24px -8px rgba(4,10,26,0.55);
+    --shadow-2:0 2px 6px rgba(4,10,26,0.35), 0 16px 40px -12px rgba(4,10,26,0.6);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0; padding:0; height:100%; background:var(--blueprint); color:var(--line); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
-  body{display:flex; flex-direction:column;}
+  html{background:var(--blueprint);}
+  body{
+    margin:0; padding:0;
+    background:
+      repeating-linear-gradient(0deg, rgba(234,241,255,0.028) 0px, rgba(234,241,255,0.028) 1px, transparent 1px, transparent 40px),
+      repeating-linear-gradient(90deg, rgba(234,241,255,0.028) 0px, rgba(234,241,255,0.028) 1px, transparent 1px, transparent 40px),
+      var(--blueprint);
+    color:var(--line);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
 
   header.titleblock{
-    padding:14px 16px 12px;
-    border-bottom:2px solid var(--grid);
-    flex-shrink:0;
+    padding:16px 18px 14px;
+    border-bottom:1px solid var(--grid);
+    display:flex; align-items:center; gap:10px;
   }
+  header.titleblock .badge{
+    width:34px; height:34px; flex-shrink:0; border-radius:9px;
+    background:var(--flare);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:var(--shadow-1);
+  }
+  header.titleblock .titles{min-width:0;}
   header.titleblock h1{
     font-family:'Space Grotesk',sans-serif;
     font-weight:700;
-    font-size:19px;
-    letter-spacing:0.06em;
-    text-transform:uppercase;
-    margin:0 0 3px;
+    font-size:18px;
+    letter-spacing:0.02em;
+    margin:0 0 2px;
   }
   header.titleblock p{
     margin:0;
     font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    letter-spacing:0.04em;
+    font-size:10.5px;
+    letter-spacing:0.05em;
     color:var(--muted);
     text-transform:uppercase;
   }
 
-  main{flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden;}
+  main{display:block;}
 
   .controls{
-    padding:14px 16px;
+    padding:16px 18px 14px;
     display:flex;
     flex-direction:column;
-    gap:10px;
+    gap:14px;
     border-bottom:1px solid var(--grid);
-    flex-shrink:0;
   }
+
   .field label{
     display:block;
     font-family:'JetBrains Mono',monospace;
     font-size:10px;
-    letter-spacing:0.08em;
+    letter-spacing:0.09em;
     text-transform:uppercase;
     color:var(--muted);
-    margin-bottom:4px;
+    margin-bottom:6px;
   }
-  .field input[type="text"]{
-    width:100%;
+  .field-input{
+    position:relative;
+    display:flex;
+    align-items:center;
     background:var(--blueprint-2);
     border:1px solid var(--grid);
+    border-radius:var(--radius-sm);
+    transition:border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .field-input:focus-within{
+    border-color:var(--flare);
+    box-shadow:0 0 0 3px rgba(255,122,69,0.18);
+  }
+  .field-input svg{flex-shrink:0; margin-left:11px; opacity:0.65;}
+  .field-input input[type="text"]{
+    width:100%;
+    background:transparent;
+    border:none;
     color:var(--line);
     font-family:'Inter',sans-serif;
     font-size:15px;
-    padding:9px 10px;
-    border-radius:2px;
+    padding:11px 12px;
+    outline:none;
   }
-  .field input[type="text"]::placeholder{color:var(--muted); opacity:0.6;}
-  .field input[type="text"]:focus-visible{outline:2px solid var(--flare); outline-offset:1px;}
+  .field-input input[type="text"]::placeholder{color:var(--muted); opacity:0.55;}
 
-  .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .field-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
 
-  .toggle-group{display:flex; gap:6px;}
-  .toggle-group button{
-    font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
+  .segmented{
+    position:relative;
+    display:flex;
     background:var(--blueprint-2);
     border:1px solid var(--grid);
-    color:var(--muted);
-    padding:8px 10px;
-    border-radius:2px;
+    border-radius:var(--radius-sm);
+    padding:3px;
+    gap:2px;
   }
-  .toggle-group button[aria-pressed="true"]{
+  .segmented-thumb{
+    position:absolute;
+    top:3px; bottom:3px; left:3px;
+    width:calc((100% - 6px) / 3);
     background:var(--flare);
-    border-color:var(--flare);
-    color:var(--blueprint);
-    font-weight:600;
+    border-radius:4px;
+    box-shadow:var(--shadow-1);
+    transition:transform 0.22s cubic-bezier(0.4,0,0.2,1);
+    z-index:0;
   }
-  .toggle-group button:focus-visible{outline:2px solid var(--line); outline-offset:1px;}
+  .radiusBtn{
+    position:relative; z-index:1;
+    flex:1;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    font-weight:500;
+    letter-spacing:0.02em;
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    padding:9px 6px;
+    border-radius:4px;
+    transition:color 0.18s ease;
+  }
+  .radiusBtn[aria-pressed="true"]{color:var(--blueprint); font-weight:600;}
+  .radiusBtn:focus-visible{outline:2px solid var(--line); outline-offset:2px;}
+
+  .switch{
+    position:relative;
+    display:inline-flex; align-items:center;
+    width:42px; height:25px;
+    flex-shrink:0;
+  }
+  .switch input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer;}
+  .switch .track{
+    position:absolute; inset:0;
+    background:var(--blueprint-2);
+    border:1px solid var(--grid);
+    border-radius:999px;
+    transition:background 0.2s ease, border-color 0.2s ease;
+  }
+  .switch .thumb{
+    position:absolute; top:2px; left:2px;
+    width:19px; height:19px;
+    background:var(--muted);
+    border-radius:50%;
+    transition:transform 0.2s cubic-bezier(0.4,0,0.2,1), background 0.2s ease;
+  }
+  .switch input:checked + .track{background:var(--flare); border-color:var(--flare);}
+  .switch input:checked + .track + .thumb{transform:translateX(17px); background:var(--blueprint);}
+  .switch input:focus-visible + .track{outline:2px solid var(--line); outline-offset:2px;}
 
   .checkline{
-    display:flex; align-items:center; gap:8px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    letter-spacing:0.03em;
-    text-transform:uppercase;
-    color:var(--muted);
+    display:flex; align-items:center; gap:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    color:var(--line);
   }
-  .checkline input{width:16px; height:16px; accent-color:var(--flare);}
 
   button.primary{
+    position:relative;
     font-family:'Space Grotesk',sans-serif;
     font-weight:700;
-    font-size:14px;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
+    font-size:14.5px;
+    letter-spacing:0.02em;
     background:var(--flare);
     color:var(--blueprint);
     border:none;
-    padding:11px 14px;
-    border-radius:2px;
+    padding:13px 14px;
+    border-radius:var(--radius-sm);
     width:100%;
+    box-shadow:var(--shadow-1);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:transform 0.12s ease, box-shadow 0.12s ease, opacity 0.15s ease;
   }
-  button.primary:disabled{opacity:0.5;}
+  button.primary:active{transform:scale(0.98);}
+  button.primary:disabled{opacity:0.7;}
   button.primary:focus-visible{outline:2px solid var(--line); outline-offset:2px;}
+  .spinner{
+    width:15px; height:15px;
+    border:2px solid rgba(19,36,69,0.3);
+    border-top-color:var(--blueprint);
+    border-radius:50%;
+    animation:spin 0.7s linear infinite;
+    flex-shrink:0;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
 
   #status{
     font-family:'JetBrains Mono',monospace;
     font-size:11px;
     color:var(--muted);
     min-height:14px;
+    text-align:center;
   }
 
-  #map{width:100%; height:60vh; min-height:340px; flex-shrink:0;}
+  .map-frame{
+    padding:0 18px 14px;
+  }
+  .map-frame .map-inner{
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:var(--shadow-2);
+    border:1px solid var(--grid);
+  }
+  #map{width:100%; height:50vh; min-height:300px;}
 
   section.results{
-    flex:1;
-    overflow-y:auto;
-    padding:12px 16px 24px;
-    background:var(--blueprint);
+    padding:4px 18px calc(28px + env(safe-area-inset-bottom));
   }
-  #resultsList{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+  #resultsList{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px;}
   #resultsList li{
     background:var(--paper);
     color:var(--ink);
-    border-radius:3px;
-    padding:10px 12px;
+    border-radius:var(--radius);
+    padding:12px 13px;
     display:flex;
+    flex-direction:column;
     gap:10px;
-    align-items:flex-start;
+    box-shadow:var(--shadow-1);
+    animation:cardIn 0.32s cubic-bezier(0.2,0.6,0.3,1) backwards;
   }
+  #resultsList li:nth-child(1){animation-delay:0.02s;}
+  #resultsList li:nth-child(2){animation-delay:0.06s;}
+  #resultsList li:nth-child(3){animation-delay:0.10s;}
+  #resultsList li:nth-child(4){animation-delay:0.14s;}
+  #resultsList li:nth-child(n+5){animation-delay:0.16s;}
+  @keyframes cardIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .tag-top{display:flex; gap:11px; align-items:flex-start;}
   .tag-num{
     font-family:'JetBrains Mono',monospace;
-    font-weight:600;
+    font-weight:700;
     font-size:12px;
-    background:var(--blueprint);
+    background:var(--ink);
     color:var(--line);
     border-radius:50%;
-    width:22px; height:22px;
+    width:24px; height:24px;
     display:flex; align-items:center; justify-content:center;
     flex-shrink:0;
+    box-shadow:0 2px 4px rgba(19,36,69,0.35);
   }
   .tag-body{flex:1; min-width:0;}
-  .tag-name{font-weight:600; font-size:14px;}
-  .tag-brand{font-weight:400; color:#5A6B8C;}
-  .tag-detail{font-family:'JetBrains Mono',monospace; font-size:12px; margin-top:3px; color:#3C4D6E;}
+  .tag-name{font-weight:600; font-size:14.5px; line-height:1.3;}
+  .tag-brand{font-weight:400; color:var(--ink-soft);}
+  .tag-detail{font-family:'JetBrains Mono',monospace; font-size:11.5px; margin-top:4px; color:var(--ink-soft); line-height:1.5;}
   .tag-badge{
     font-family:'JetBrains Mono',monospace;
-    font-size:10px;
+    font-size:9.5px;
+    font-weight:600;
     letter-spacing:0.04em;
     text-transform:uppercase;
-    padding:3px 7px;
-    border-radius:2px;
+    padding:4px 8px;
+    border-radius:999px;
     white-space:nowrap;
     flex-shrink:0;
   }
-  .tag-badge.onroute{background:rgba(62,217,160,0.18); color:#1C7A57;}
-  .tag-badge.detour{background:rgba(255,200,87,0.25); color:#8A6100;}
+  .tag-badge.onroute{background:rgba(62,217,160,0.2); color:#166B49;}
+  .tag-badge.detour{background:rgba(255,200,87,0.28); color:#7A5600;}
+
+  .nav-links{display:flex; gap:7px; padding-left:35px;}
+  .nav-links a{
+    flex:1;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+    font-family:'Inter',sans-serif;
+    font-size:11.5px;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--paper);
+    background:var(--ink);
+    border-radius:var(--radius-sm);
+    padding:8px 6px;
+    transition:transform 0.12s ease, opacity 0.12s ease;
+  }
+  .nav-links a:active{transform:scale(0.96); opacity:0.85;}
+  .nav-links a:focus-visible{outline:2px solid var(--flare); outline-offset:1px;}
+  .nav-links a svg{flex-shrink:0;}
+  .nav-links a.waze{background:#0F1D3A;}
+  .nav-links a.gmaps{background:#1A3A6B;}
+  .nav-links a.apple{background:#33475F;}
 
   .empty{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
     font-family:'JetBrains Mono',monospace;
     font-size:12px;
     color:var(--muted);
     text-align:center;
-    padding:24px 12px;
+    padding:36px 20px;
   }
+  .empty svg{opacity:0.5;}
 
   @media (min-width: 820px){
-    main{flex-direction:row;}
-    .controls{width:300px; border-right:1px solid var(--grid); border-bottom:none; overflow-y:auto;}
-    #map{flex:1; height:auto;}
-    section.results{width:340px; border-left:1px solid var(--grid);}
-    main > .mapcol{flex:1; display:flex; flex-direction:column;}
+    body{display:flex; flex-direction:column; height:100dvh; overflow:hidden;}
+    header.titleblock{flex-shrink:0;}
+    main{flex:1; display:flex; flex-direction:row; min-height:0; overflow:hidden;}
+    .controls{width:300px; flex-shrink:0; overflow-y:auto; border-right:1px solid var(--grid); border-bottom:none;}
+    .map-frame{flex:1; display:flex; padding:16px;}
+    .map-frame .map-inner{flex:1;}
+    #map{width:100%; height:100%; min-height:0;}
+    section.results{width:340px; flex-shrink:0; border-left:1px solid var(--grid); overflow-y:auto; padding-top:16px;}
   }
 
-  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
 </style>
 </head>
 <body>
 
 <header class="titleblock">
-  <h1>Carnet de Route</h1>
-  <p>Stations-service sur votre trajet en cours</p>
+  <div class="badge">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8Z" fill="#132445"/><circle cx="12" cy="10" r="3.2" fill="#3ED9A0"/></svg>
+  </div>
+  <div class="titles">
+    <h1>Carnet de Route</h1>
+    <p>Stations-service sur votre trajet</p>
+  </div>
 </header>
 
 <main>
   <section class="controls">
     <div class="field">
       <label for="originInput">Position actuelle</label>
-      <input type="text" id="originInput" placeholder="Détectée automatiquement, ou lat,lng">
+      <div class="field-input">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2"/></svg>
+        <input type="text" id="originInput" placeholder="Détectée automatiquement, ou lat,lng">
+      </div>
     </div>
     <div class="field">
       <label for="destInput">Destination</label>
-      <input type="text" id="destInput" placeholder="Adresse ou ville d'arrivée">
+      <div class="field-input">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg>
+        <input type="text" id="destInput" placeholder="Adresse ou ville d'arrivée">
+      </div>
     </div>
     <div class="field">
       <label for="brandInput">Marque recherchée</label>
-      <input type="text" id="brandInput" placeholder="Ex. Total, Shell, Esso">
+      <div class="field-input">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V8l6-4 6 4v13"/><path d="M10 21v-6h4v6M15 10h3a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-3-3"/></svg>
+        <input type="text" id="brandInput" placeholder="Ex. Total, Shell, Esso">
+      </div>
     </div>
 
     <div class="field">
       <label>Détour accepté</label>
-      <div class="toggle-group" role="group" aria-label="Rayon de détour accepté">
-        <button type="button" class="radiusBtn" data-r="0" aria-pressed="true">Aucun</button>
-        <button type="button" class="radiusBtn" data-r="1" aria-pressed="false">1 km</button>
-        <button type="button" class="radiusBtn" data-r="5" aria-pressed="false">5 km</button>
+      <div class="segmented" role="group" aria-label="Rayon de détour accepté">
+        <span class="segmented-thumb" id="segThumb"></span>
+        <button type="button" class="radiusBtn" data-r="0" data-i="0" aria-pressed="true">Aucun</button>
+        <button type="button" class="radiusBtn" data-r="1" data-i="1" aria-pressed="false">1 km</button>
+        <button type="button" class="radiusBtn" data-r="5" data-i="2" aria-pressed="false">5 km</button>
       </div>
     </div>
 
-    <label class="checkline">
-      <input type="checkbox" id="openOnlyCheck">
-      Ouvertes uniquement à l'arrivée
-    </label>
+    <div class="field-row">
+      <label class="checkline" for="openOnlyCheck" style="margin:0;">Ouvertes uniquement à l'arrivée</label>
+      <span class="switch">
+        <input type="checkbox" id="openOnlyCheck">
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </span>
+    </div>
 
-    <button type="button" class="primary" id="searchBtn">Rechercher</button>
+    <button type="button" class="primary" id="searchBtn">
+      <span id="searchBtnLabel">Rechercher</span>
+    </button>
     <div id="status" aria-live="polite"></div>
   </section>
 
-  <div class="mapcol">
-    <div id="map"></div>
-    <section class="results">
-      <ol id="resultsList"></ol>
-    </section>
+  <div class="map-frame">
+    <div class="map-inner"><div id="map"></div></div>
   </div>
+
+  <section class="results">
+    <ol id="resultsList"></ol>
+  </section>
 </main>
 
 <script>
@@ -258,14 +416,14 @@
   const SEARCH_RADIUS_M = 3000;
 
   const BLUEPRINT_STYLE = [
-    { elementType: 'geometry', stylers: [{ color: '#132445' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#132445' }] },
+    { elementType: 'geometry', stylers: [{ color: '#0F1D3A' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#0F1D3A' }] },
     { elementType: 'labels.text.fill', stylers: [{ color: '#8FA6C9' }] },
     { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#28407A' }] },
     { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#DCE8FF' }, { weight: 0.5 }] },
     { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3A5A9E' }] },
     { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#DCE8FF' }, { weight: 0.8 }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0E1B36' }] },
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0A1530' }] },
     { featureType: 'poi', stylers: [{ visibility: 'off' }] },
     { featureType: 'transit', stylers: [{ visibility: 'off' }] },
     { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#28407A' }, { weight: 0.5 }] },
@@ -394,6 +552,7 @@
     const brand = document.getElementById('brandInput').value.trim();
     const status = document.getElementById('status');
     const btn = document.getElementById('searchBtn');
+    const btnLabel = document.getElementById('searchBtnLabel');
 
     if (!originVal || !destVal || !brand) {
       status.textContent = 'Renseignez la position actuelle, la destination et la marque.';
@@ -401,6 +560,7 @@
     }
 
     btn.disabled = true;
+    btnLabel.innerHTML = '<span class="spinner"></span> Recherche…';
     status.textContent = 'Calcul du trajet…';
 
     try {
@@ -482,12 +642,15 @@
       status.textContent = 'Erreur : ' + err.message;
     } finally {
       btn.disabled = false;
+      btnLabel.textContent = 'Rechercher';
     }
   }
 
   // ————————————————————————————————————————————————————————————
   // Rendu (filtrage 100% côté client, sans nouvel appel réseau)
   // ————————————————————————————————————————————————————————————
+  const NAV_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 21l8-4.5L20 21 12 2Z"/></svg>';
+
   function renderAll() {
     const openOnly = document.getElementById('openOnlyCheck').checked;
     const list = document.getElementById('resultsList');
@@ -503,9 +666,10 @@
     });
 
     if (filtered.length === 0) {
-      list.innerHTML = '<li class="empty" style="display:block; background:none; color:var(--muted);">' +
+      const emptyIcon = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg>';
+      list.innerHTML = '<li class="empty" style="background:none; box-shadow:none; animation:none;">' + emptyIcon + '<span>' +
         (allStations.length === 0 ? 'Lancez une recherche pour voir les stations.' : 'Aucune station ne correspond à ces filtres.') +
-        '</li>';
+        '</span></li>';
       return;
     }
 
@@ -514,8 +678,8 @@
       const marker = new google.maps.Marker({
         position: { lat: s.lat, lng: s.lng },
         map,
-        label: { text: String(i + 1), color: '#132445', fontWeight: '700', fontFamily: 'JetBrains Mono' },
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: color, fillOpacity: 1, strokeColor: '#132445', strokeWeight: 2 }
+        label: { text: String(i + 1), color: '#0F1D3A', fontWeight: '700', fontFamily: 'JetBrains Mono' },
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: color, fillOpacity: 1, strokeColor: '#0F1D3A', strokeWeight: 2 }
       });
       markers.push(marker);
 
@@ -527,13 +691,25 @@
       const badgeClass = s.onRoute ? 'onroute' : 'detour';
       const badgeText = s.onRoute ? 'Sur le trajet' : 'Détour';
 
+      const wazeUrl = 'https://waze.com/ul?ll=' + s.lat + ',' + s.lng + '&navigate=yes';
+      const gmapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng +
+        '&destination_place_id=' + encodeURIComponent(s.placeId) + '&travelmode=driving';
+      const appleUrl = 'https://maps.apple.com/?daddr=' + s.lat + ',' + s.lng + '&dirflg=d';
+
       li.innerHTML =
-        '<span class="tag-num">' + (i + 1) + '</span>' +
-        '<span class="tag-body">' +
-          '<div class="tag-name">' + s.name + ' <span class="tag-brand">· ' + escapeHtml(document.getElementById('brandInput').value.trim()) + '</span></div>' +
-          '<div class="tag-detail">' + detail + '</div>' +
-        '</span>' +
-        '<span class="tag-badge ' + badgeClass + '">' + badgeText + '</span>';
+        '<div class="tag-top">' +
+          '<span class="tag-num">' + (i + 1) + '</span>' +
+          '<span class="tag-body">' +
+            '<div class="tag-name">' + s.name + ' <span class="tag-brand">· ' + escapeHtml(document.getElementById('brandInput').value.trim()) + '</span></div>' +
+            '<div class="tag-detail">' + detail + '</div>' +
+          '</span>' +
+          '<span class="tag-badge ' + badgeClass + '">' + badgeText + '</span>' +
+        '</div>' +
+        '<div class="nav-links">' +
+          '<a class="waze" href="' + wazeUrl + '" target="_blank" rel="noopener">' + NAV_ICON + 'Waze</a>' +
+          '<a class="gmaps" href="' + gmapsUrl + '" target="_blank" rel="noopener">' + NAV_ICON + 'Maps</a>' +
+          '<a class="apple" href="' + appleUrl + '" target="_blank" rel="noopener">' + NAV_ICON + 'Plans</a>' +
+        '</div>';
       list.appendChild(li);
     });
   }
@@ -552,11 +728,13 @@
       map, suppressMarkers: true, polylineOptions: { strokeColor: '#DCE8FF', strokeWeight: 4 }
     });
 
+    const segThumb = document.getElementById('segThumb');
     document.querySelectorAll('.radiusBtn').forEach((b) => {
       b.addEventListener('click', () => {
         document.querySelectorAll('.radiusBtn').forEach((x) => x.setAttribute('aria-pressed', 'false'));
         b.setAttribute('aria-pressed', 'true');
         currentRadius = parseFloat(b.dataset.r);
+        segThumb.style.transform = 'translateX(' + (100 * Number(b.dataset.i)) + '%)';
         renderAll();
       });
     });
