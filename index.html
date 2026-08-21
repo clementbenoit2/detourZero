@@ -6,7 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#132445">
-<title>Carnet de Route</title>
+<meta name="apple-mobile-web-app-title" content="Roadbook-DetourZero">
+<title>Roadbook-DetourZero</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="favicon-32.png" sizes="32x32">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,9 +61,12 @@
   header.titleblock h1{
     font-family:'Space Grotesk',sans-serif;
     font-weight:700;
-    font-size:18px;
-    letter-spacing:0.02em;
+    font-size:16.5px;
+    letter-spacing:0.01em;
     margin:0 0 2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
   header.titleblock p{
     margin:0;
@@ -323,6 +327,30 @@
   }
   .empty svg{opacity:0.5;}
 
+  /* Liste de suggestions Google (autocomplétion destination) — thème assorti */
+  .pac-container{
+    background:var(--blueprint-2);
+    border:1px solid var(--grid);
+    border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-2);
+    font-family:'Inter',sans-serif;
+    margin-top:4px;
+    overflow:hidden;
+    z-index:20;
+  }
+  .pac-item{
+    padding:10px 12px;
+    font-size:13.5px;
+    color:var(--muted);
+    border-top:1px solid var(--grid);
+    cursor:pointer;
+  }
+  .pac-item:first-child{border-top:none;}
+  .pac-item:hover, .pac-item-selected{background:var(--blueprint-3);}
+  .pac-item-query{color:var(--line); font-size:14.5px; font-weight:500;}
+  .pac-matched{color:var(--flare);}
+  .pac-icon{filter:invert(1) brightness(1.6);}
+
   @media (min-width: 820px){
     body{display:flex; flex-direction:column; height:100dvh; overflow:hidden;}
     header.titleblock{flex-shrink:0;}
@@ -346,7 +374,7 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8Z" fill="#132445"/><circle cx="12" cy="10" r="3.2" fill="#3ED9A0"/></svg>
   </div>
   <div class="titles">
-    <h1>Carnet de Route</h1>
+    <h1>Roadbook-DetourZero</h1>
     <p>Stations-service sur votre trajet</p>
   </div>
 </header>
@@ -438,6 +466,8 @@
   // ————————————————————————————————————————————————————————————
   let map, directionsRenderer, markers = [];
   let allStations = [];
+  let lastOriginParam = null;
+  let lastDestVal = null;
   let currentRadius = 0;
   let destAutocomplete;
 
@@ -640,6 +670,8 @@
 
       enriched.sort((a, b) => a.cumKm - b.cumKm);
       allStations = enriched;
+      lastOriginParam = originParam;
+      lastDestVal = destVal;
       status.textContent = '';
       renderAll();
     } catch (err) {
@@ -696,8 +728,14 @@
       const badgeText = s.onRoute ? 'Sur le trajet' : 'Détour';
 
       const wazeUrl = 'https://waze.com/ul?ll=' + s.lat + ',' + s.lng + '&navigate=yes';
-      const gmapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng +
-        '&destination_place_id=' + encodeURIComponent(s.placeId) + '&travelmode=driving';
+      const originStr = lastOriginParam
+        ? (typeof lastOriginParam === 'string' ? lastOriginParam : lastOriginParam.lat + ',' + lastOriginParam.lng)
+        : '';
+      const gmapsUrl = 'https://www.google.com/maps/dir/?api=1' +
+        (originStr ? '&origin=' + encodeURIComponent(originStr) : '') +
+        '&waypoints=' + encodeURIComponent(s.lat + ',' + s.lng) +
+        '&destination=' + encodeURIComponent(lastDestVal || (s.lat + ',' + s.lng)) +
+        '&travelmode=driving';
       const appleUrl = 'https://maps.apple.com/?daddr=' + s.lat + ',' + s.lng + '&dirflg=d';
 
       li.innerHTML =
@@ -710,9 +748,9 @@
           '<span class="tag-badge ' + badgeClass + '">' + badgeText + '</span>' +
         '</div>' +
         '<div class="nav-links">' +
-          '<a class="waze" href="' + wazeUrl + '" target="_blank" rel="noopener">' + NAV_ICON + 'Waze</a>' +
-          '<a class="gmaps" href="' + gmapsUrl + '" target="_blank" rel="noopener">' + NAV_ICON + 'Maps</a>' +
-          '<a class="apple" href="' + appleUrl + '" target="_blank" rel="noopener">' + NAV_ICON + 'Plans</a>' +
+          '<a class="waze" href="' + wazeUrl + '" target="_blank" rel="noopener" title="Waze ne permet pas d\'ajouter un arrêt via un lien : ceci définit la station comme nouvelle destination.">' + NAV_ICON + 'Waze</a>' +
+          '<a class="gmaps" href="' + gmapsUrl + '" target="_blank" rel="noopener" title="Ouvre l\'itinéraire complet départ → station → destination sur un seul trajet.">' + NAV_ICON + 'Maps</a>' +
+          '<a class="apple" href="' + appleUrl + '" target="_blank" rel="noopener" title="Apple Plans ne permet pas d\'ajouter un arrêt via un lien : ceci définit la station comme nouvelle destination.">' + NAV_ICON + 'Plans</a>' +
         '</div>';
       list.appendChild(li);
     });
@@ -732,6 +770,16 @@
       map, suppressMarkers: true, polylineOptions: { strokeColor: '#DCE8FF', strokeWeight: 4 }
     });
 
+    // Suggestions de destination au fil de la saisie
+    const destInput = document.getElementById('destInput');
+    destAutocomplete = new google.maps.places.Autocomplete(destInput, {
+      fields: ['formatted_address', 'geometry', 'name']
+    });
+    destAutocomplete.addListener('place_changed', () => {
+      const place = destAutocomplete.getPlace();
+      if (place && place.formatted_address) destInput.value = place.formatted_address;
+    });
+
     const segThumb = document.getElementById('segThumb');
     document.querySelectorAll('.radiusBtn').forEach((b) => {
       b.addEventListener('click', () => {
@@ -747,7 +795,17 @@
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => { document.getElementById('originInput').value = pos.coords.latitude.toFixed(5) + ',' + pos.coords.longitude.toFixed(5); },
+        (pos) => {
+          document.getElementById('originInput').value = pos.coords.latitude.toFixed(5) + ',' + pos.coords.longitude.toFixed(5);
+          // Biaise les suggestions de destination autour de la position actuelle (rayon ~150 km)
+          const km = 150;
+          const dLat = km / 111;
+          const dLng = km / (111 * Math.cos(pos.coords.latitude * Math.PI / 180));
+          destAutocomplete.setBounds(new google.maps.LatLngBounds(
+            { lat: pos.coords.latitude - dLat, lng: pos.coords.longitude - dLng },
+            { lat: pos.coords.latitude + dLat, lng: pos.coords.longitude + dLng }
+          ));
+        },
         () => { document.getElementById('status').textContent = 'Position non détectée : saisissez-la manuellement (lat,lng).'; },
         { enableHighAccuracy: true, timeout: 8000 }
       );
